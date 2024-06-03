@@ -19,7 +19,7 @@ export const verifyTWT = asyncHnadler(async (req, _, next) => {
         const user = await User.findById(decodedToken?._id).select("-password -refreshToken")
 
         if (!user) {
-            // TODO: Discuss about frontend
+
             throw new ApiError(401, "Invalid Access Token ")
         }
 
