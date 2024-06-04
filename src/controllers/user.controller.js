@@ -252,4 +252,129 @@ const refreshAccessToken = asyncHnadler(async (req, res) => {
 
 })
 
-export { registerUSer, loginUser, logoutUser, refreshAccessToken }
+
+const changeCurrentPassword = asyncHnadler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body
+
+    const user = await User.findById(req.user?._id)
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+
+    if (!isPasswordCorrect) {
+        throw new ApiError(400, "Invalid password")
+    }
+
+
+    user.password = newPassword
+    await user.save({ validateBeforeSave: false })
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Password change Successfully"))
+
+
+})
+
+const getCurrentUser = asyncHnadler(async (req, res) => {
+    return res
+        .status(200)
+        .json(200, req.user, "Current User Fetched SuccesseFully")
+})
+
+const updateAccountDetails = asyncHnadler(async (req, res) => {
+    const { fullName, email } = req.body
+
+    if (!fullName || !email) {
+        throw new ApiError(400, "All feilds are required")
+    }
+
+    const user = User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                fullName,
+                email, //inconsistence
+
+            }
+        },
+        { new: true }
+
+    ).select("-password")
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, "Account Details Updated Successfully"))
+
+
+
+
+})
+
+const updateUserAvatar = asyncHnadler(async (req, res) => {
+    const avatarLocalPath = req.file?.path
+
+    if (!avatarLocalPath) {
+        throw new ApiError(400, "Avatar File is Missing")
+    }
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath)
+
+
+    if (!avatar.url) {
+        throw new ApiError(400, "Error While Uploading on Avatar")
+
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                avatar: avatar.url
+            }
+        },
+        { new: true }
+    ).select("-password")
+
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, "Avatar Updated Successfully"))
+})
+
+
+const upadateUserCoverImage = asyncHnadler(async (req, res) => {
+    const covarImageLocalPath = req.file?.path
+
+    if (!covarImageLocalPath) {
+        throw new ApiError(400, "Cover File is Missing")
+    }
+
+    const coverImage = await uploadOnCloudinary(covarImageLocalPath)
+
+
+    if (!covarImageLocalPath.url) {
+        throw new ApiError(400, "Error While Uploading on CoverImage")
+
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                avatar: coverImage.url
+            }
+        },
+        { new: true }
+    ).select("-password")
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, "Cover Image Updated Successfully"))
+
+
+
+
+})
+
+
+
+export { registerUSer, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, upadateUserCoverImage }
